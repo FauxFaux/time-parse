@@ -1,0 +1,9 @@
+[package]
+name = "time-parse"
+version = "0.1.0"
+authors = ["Chris West (Faux) <git@goeswhere.com>"]
+
+[dependencies]
+chrono = "0.4"
+failure = "0.1"
+nom = "4.0.0-beta3"
