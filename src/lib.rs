@@ -1,5 +1,6 @@
+#[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate nom;
 
-mod duration;
+pub mod duration;
