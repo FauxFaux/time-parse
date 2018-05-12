@@ -1,3 +1,4 @@
+use std::iter::Peekable;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -77,6 +78,29 @@ pub fn parse_nom(input: &str) -> Result<Duration, Error> {
     }
 }
 
+struct Parts<'s> {
+    inner: &'s str,
+    last: usize,
+}
+
+impl<'s> Parts<'s> {
+    fn new(inner: &str) -> Parts {
+        Parts { inner, last: 0 }
+    }
+}
+
+impl<'s> Iterator for Parts<'s> {
+    type Item = (&'s str, char);
+
+    fn next(&mut self) -> Option<(&'s str, char)> {
+        let cur = &self.inner[self.last..];
+        cur.find(|c: char| c.is_ascii_alphabetic()).map(|next| {
+            self.last += next + 1;
+            (&cur[..next], cur[next..].chars().next().unwrap())
+        })
+    }
+}
+
 pub fn parse(input: &str) -> Result<Duration, Error> {
     let mut parts = input.match_indices(|c: char| c.is_alphabetic()).peekable();
 
@@ -123,6 +147,12 @@ pub fn parse(input: &str) -> Result<Duration, Error> {
         }
     }
 
+    ensure!(
+        parts.next().is_none() && last == input.len(),
+        "unexpected trailing data: {:?}",
+        &input[last..]
+    );
+
     Ok(Duration::new(seconds, nanos))
 }
 
@@ -161,5 +191,12 @@ mod tests {
             Duration::new((2 * 24 + 1) * 60 * 60, 0),
             parse("P2DT1H").unwrap()
         );
+    }
+
+    #[test]
+    fn parts() {
+        let mut p = super::Parts::new("1D23M");
+        assert_eq!(Some(("1", 'D')), p.next());
+        assert_eq!(Some(("23", 'M')), p.next());
     }
 }
