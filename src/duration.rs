@@ -70,11 +70,60 @@ named!(period<CompleteStr, (u64, u32)>,
         )
     ));
 
-pub fn parse(input: &str) -> Result<Duration, Error> {
+pub fn parse_nom(input: &str) -> Result<Duration, Error> {
     match period(CompleteStr(input)) {
         Ok((CompleteStr(""), (s, ns))) => Ok(Duration::new(s, ns)),
         other => bail!("invalid: {:?}", other),
     }
+}
+
+pub fn parse(input: &str) -> Result<Duration, Error> {
+    let mut parts = input.match_indices(|c: char| c.is_alphabetic()).peekable();
+
+    let (sign, mut last) = match parts.next() {
+        Some((0, "p")) | Some((0, "P")) => (1, 1),
+        Some((1, "p")) | Some((1, "P")) if input.starts_with('-') => (-1, 2),
+        _ => bail!("invalid prefix, expecting 'P' or '-P'"),
+    };
+
+    let mut seconds = 0u64;
+    let mut nanos = 0u32;
+
+    for (token, parse_nanos, mul) in &[
+        ("W", false, Some(SECS_PER_WEEK)),
+        ("D", false, Some(SECS_PER_DAY)),
+        ("T", false, None),
+        ("H", false, Some(SECS_PER_HOUR)),
+        ("M", false, Some(SECS_PER_MINUTE)),
+        ("S", true, Some(1)),
+    ] {
+        if let Some((idx, available_token)) = parts.peek().cloned() {
+            if !token.eq_ignore_ascii_case(available_token) {
+                continue;
+            }
+
+            parts.next().unwrap();
+
+            let mut body = &input[last..idx];
+
+            if let Some(mul) = mul {
+                if *parse_nanos {
+                    if let Some(first_point) = body.find('.') {
+                        let (main, after) = body.split_at(first_point);
+                        body = main;
+                        nanos = to_nanos(CompleteStr(&after[1..])).expect(after);
+                    }
+                }
+                seconds += u64::from_str(body)? * *mul;
+            } else {
+                ensure!(body.is_empty(), "unexpected data preceding 'T': {:?}", body)
+            }
+
+            last = idx + 1;
+        }
+    }
+
+    Ok(Duration::new(seconds, nanos))
 }
 
 #[cfg(test)]
