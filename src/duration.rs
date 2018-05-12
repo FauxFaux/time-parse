@@ -80,12 +80,11 @@ pub fn parse_nom(input: &str) -> Result<Duration, Error> {
 
 struct Parts<'s> {
     inner: &'s str,
-    last: usize,
 }
 
 impl<'s> Parts<'s> {
     fn new(inner: &str) -> Parts {
-        Parts { inner, last: 0 }
+        Parts { inner }
     }
 }
 
@@ -93,11 +92,13 @@ impl<'s> Iterator for Parts<'s> {
     type Item = (&'s str, char);
 
     fn next(&mut self) -> Option<(&'s str, char)> {
-        let cur = &self.inner[self.last..];
-        cur.find(|c: char| c.is_ascii_alphabetic()).map(|next| {
-            self.last += next + 1;
-            (&cur[..next], cur[next..].chars().next().unwrap())
-        })
+        self.inner
+            .find(|c: char| c.is_ascii_alphabetic())
+            .map(|next| {
+                let (init, point) = self.inner.split_at(next);
+                self.inner = &point[1..];
+                (init, point.chars().next().unwrap())
+            })
     }
 }
 
