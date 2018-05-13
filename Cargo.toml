@@ -3,6 +3,17 @@ name = "time-parse"
 version = "0.1.0"
 authors = ["Chris West (Faux) <git@goeswhere.com>"]
 
+categories = [
+    "parsing",
+]
+description = "Parse iso8601 periods"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/FauxFaux/time-parse"
+
+[badges.travis-ci]
+repository = "FauxFaux/time-parse"
+
 [dependencies]
 failure = "0.1"
 nom = "4.0.0-beta3"
