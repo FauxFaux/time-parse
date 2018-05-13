@@ -10,14 +10,42 @@ const SECS_PER_HOUR: u64 = 60 * SECS_PER_MINUTE;
 const SECS_PER_DAY: u64 = 24 * SECS_PER_HOUR;
 const SECS_PER_WEEK: u64 = 7 * SECS_PER_DAY;
 
-pub use self::duration_nom::parse as parse_nom;
 pub use self::duration_hand::parse;
+pub use self::duration_nom::parse as parse_nom;
 
-fn to_nanos<S: AsRef<str>>(s: S) -> Result<u32, Error> {
-    let s = s.as_ref();
+/// AsRef<str> but implementable on nom types
+/// Workaround for https://github.com/Geal/nom/pull/753
+trait Strable {
+    fn as_str(&self) -> &str;
+}
+
+impl<'s> Strable for &'s str {
+    fn as_str(&self) -> &str {
+        self
+    }
+}
+
+impl<'s> Strable for AsRef<str> {
+    fn as_str(&self) -> &str {
+        self.as_ref()
+    }
+}
+
+impl<'s> Strable for ::nom::types::CompleteStr<'s> {
+    fn as_str(&self) -> &str {
+        self.0
+    }
+}
+
+fn to_nanos<S: Strable>(s: S) -> Result<u32, Error> {
+    let s = s.as_str();
 
     const NANO_DIGITS: usize = 9;
-    ensure!(s.len() <= NANO_DIGITS, "too many nanoseconds digits: {:?}", s);
+    ensure!(
+        s.len() <= NANO_DIGITS,
+        "too many nanoseconds digits: {:?}",
+        s
+    );
 
     let extra_zeros = (NANO_DIGITS - s.len()) as u32;
     let mul = 10u32.pow(extra_zeros);

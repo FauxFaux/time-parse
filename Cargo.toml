@@ -5,11 +5,7 @@ authors = ["Chris West (Faux) <git@goeswhere.com>"]
 
 [dependencies]
 failure = "0.1"
-
-[dependencies.nom]
-# 4.0.0-beta3 + https://github.com/Geal/nom/pull/753
-git = "https://github.com/FauxFaux/nom"
-rev = "512abd47b582348854fa6194c8c4fd8584adcf06"
+nom = "4.0.0-beta3"
 
 [dev-dependencies]
 bencher = "0.1"
