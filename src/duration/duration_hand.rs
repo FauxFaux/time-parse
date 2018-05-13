@@ -23,66 +23,68 @@ impl<'s> Iterator for Parts<'s> {
             .map(|next| {
                 let (init, point) = self.inner.split_at(next);
                 self.inner = &point[1..];
-                (init, point.chars().next().unwrap())
+                (init, point.chars().next().unwrap().to_ascii_uppercase())
             })
     }
 }
 
-pub fn parse(input: &str) -> Result<Duration, Error> {
-    let mut parts = input.match_indices(|c: char| c.is_alphabetic()).peekable();
+fn maybe_take(parts: &mut Peekable<Parts>, token: char, mul: u64) -> Result<u64, Error> {
+    println!("{} {:?}", token, parts.peek());
+    Ok(match parts.peek().cloned() {
+        Some((body, found_token)) if found_token == token => {
+            parts.next().unwrap();
+            u64::from_str(body)? * mul
+        }
+        _ => 0,
+    })
+}
 
-    let (sign, mut last) = match parts.next() {
-        Some((0, "p")) | Some((0, "P")) => (1, 1),
-        Some((1, "p")) | Some((1, "P")) if input.starts_with('-') => (-1, 2),
-        _ => bail!("invalid prefix, expecting 'P' or '-P'"),
-    };
+fn take_empty(parts: &mut Peekable<Parts>, token: char) -> Result<(), Error> {
+    match parts.next() {
+        Some(("", avail)) if avail == token => Ok(()),
+        Some((head, avail)) if avail == token => {
+            bail!("invalid data before '{}': {:?}", token, head)
+        }
+        other => bail!("expected '{}', not {:?}", token, other),
+    }
+}
+
+pub fn parse(input: &str) -> Result<Duration, Error> {
+    let mut parts = Parts::new(input).peekable();
 
     let mut seconds = 0u64;
     let mut nanos = 0u32;
 
-    for (token, parse_nanos, mul) in &[
-        ("W", false, Some(super::SECS_PER_WEEK)),
-        ("D", false, Some(super::SECS_PER_DAY)),
-        ("T", false, None),
-        ("H", false, Some(super::SECS_PER_HOUR)),
-        ("M", false, Some(super::SECS_PER_MINUTE)),
-        ("S", true, Some(1)),
-    ] {
-        if let Some((idx, available_token)) = parts.peek().cloned() {
-            if !token.eq_ignore_ascii_case(available_token) {
-                continue;
-            }
+    take_empty(&mut parts, 'P')?;
 
-            parts.next().unwrap();
+    seconds += maybe_take(&mut parts, 'W', super::SECS_PER_WEEK)?;
+    seconds += maybe_take(&mut parts, 'D', super::SECS_PER_DAY)?;
 
-            let mut body = &input[last..idx];
+    take_empty(&mut parts, 'T')?;
 
-            if let Some(mul) = mul {
-                if *parse_nanos {
-                    if let Some(first_point) = body.find('.') {
-                        let (main, after) = body.split_at(first_point);
-                        body = main;
-                        nanos = super::to_nanos(&after[1..]).expect(after);
-                    }
-                }
-                seconds += u64::from_str(body)? * *mul;
-            } else {
-                ensure!(body.is_empty(), "unexpected data preceding 'T': {:?}", body)
-            }
+    seconds += maybe_take(&mut parts, 'H', super::SECS_PER_HOUR)?;
+    seconds += maybe_take(&mut parts, 'M', super::SECS_PER_MINUTE)?;
 
-            last = idx + 1;
+    if let Some((mut body, 'S')) = parts.peek() {
+        parts.next().unwrap();
+
+        if let Some(first_point) = body.find('.') {
+            let (main, after) = body.split_at(first_point);
+            body = main;
+            nanos = super::to_nanos(&after[1..]).expect("TODO");
         }
+
+        seconds += u64::from_str(body)?;
     }
 
     ensure!(
-        parts.next().is_none() && last == input.len(),
+        parts.peek().is_none(),
         "unexpected trailing data: {:?}",
-        &input[last..]
+        parts.next().unwrap(),
     );
 
     Ok(Duration::new(seconds, nanos))
 }
-
 
 #[cfg(test)]
 mod tests {

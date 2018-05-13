@@ -26,7 +26,6 @@ fn to_nanos<S: AsRef<str>>(s: S) -> Result<u32, ()> {
     Ok(num * mul)
 }
 
-
 #[cfg(test)]
 mod tests {
     use std::time::Duration;

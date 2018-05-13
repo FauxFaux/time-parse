@@ -58,7 +58,6 @@ pub fn parse(input: &str) -> Result<Duration, Error> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
