@@ -29,7 +29,6 @@ impl<'s> Iterator for Parts<'s> {
 }
 
 fn maybe_take(parts: &mut Peekable<Parts>, token: char, mul: u64) -> Result<u64, Error> {
-    println!("{} {:?}", token, parts.peek());
     Ok(match parts.peek().cloned() {
         Some((body, found_token)) if found_token == token => {
             parts.next().unwrap();
