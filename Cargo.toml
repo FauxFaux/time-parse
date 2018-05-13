@@ -11,3 +11,13 @@ failure = "0.1"
 # 4.0.0-beta3 + https://github.com/Geal/nom/pull/753
 git = "https://github.com/FauxFaux/nom"
 rev = "512abd47b582348854fa6194c8c4fd8584adcf06"
+
+[dev-dependencies]
+bencher = "0.1"
+
+[[bench]]
+name = "duration_bench"
+harness = false
+
+[profile.bench]
+lto = true
