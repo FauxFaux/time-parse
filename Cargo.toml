@@ -6,4 +6,8 @@ authors = ["Chris West (Faux) <git@goeswhere.com>"]
 [dependencies]
 chrono = "0.4"
 failure = "0.1"
-nom = "4.0.0-beta3"
+
+[dependencies.nom]
+# 4.0.0-beta3 + https://github.com/Geal/nom/pull/753
+git = "https://github.com/FauxFaux/nom"
+rev = "512abd47b582348854fa6194c8c4fd8584adcf06"
