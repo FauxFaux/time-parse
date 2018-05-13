@@ -23,7 +23,7 @@ impl<'s> Iterator for Parts<'s> {
             .map(|next| {
                 let (init, point) = self.inner.split_at(next);
                 self.inner = &point[1..];
-                (init, point.chars().next().unwrap().to_ascii_uppercase())
+                (init, point.as_bytes()[0].to_ascii_uppercase() as char)
             })
     }
 }
