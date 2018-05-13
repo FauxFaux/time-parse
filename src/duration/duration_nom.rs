@@ -1,5 +1,3 @@
-use std::iter::Peekable;
-use std::str::FromStr;
 use std::time::Duration;
 
 use failure::Error;
@@ -61,8 +59,6 @@ pub fn parse(input: &str) -> Result<Duration, Error> {
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
-
-    use nom::types::CompleteStr;
 
     #[test]
     fn duration() {

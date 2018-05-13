@@ -71,7 +71,7 @@ pub fn parse(input: &str) -> Result<Duration, Error> {
         if let Some(first_point) = body.find('.') {
             let (main, after) = body.split_at(first_point);
             body = main;
-            nanos = super::to_nanos(&after[1..]).expect("TODO");
+            nanos = super::to_nanos(&after[1..])?;
         }
 
         seconds += u64::from_str(body)?;
@@ -89,8 +89,6 @@ pub fn parse(input: &str) -> Result<Duration, Error> {
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
-
-    use nom::types::CompleteStr;
 
     #[test]
     fn duration() {

@@ -1,7 +1,6 @@
 mod duration_hand;
 mod duration_nom;
 
-use std::iter::Peekable;
 use std::str::FromStr;
 
 use failure::Error;
@@ -11,25 +10,23 @@ const SECS_PER_HOUR: u64 = 60 * SECS_PER_MINUTE;
 const SECS_PER_DAY: u64 = 24 * SECS_PER_HOUR;
 const SECS_PER_WEEK: u64 = 7 * SECS_PER_DAY;
 
-fn to_nanos<S: AsRef<str>>(s: S) -> Result<u32, ()> {
+pub use self::duration_nom::parse as parse_nom;
+pub use self::duration_hand::parse;
+
+fn to_nanos<S: AsRef<str>>(s: S) -> Result<u32, Error> {
     let s = s.as_ref();
 
     const NANO_DIGITS: usize = 9;
-
-    if s.len() > NANO_DIGITS {
-        return Err(());
-    }
+    ensure!(s.len() <= NANO_DIGITS, "too many nanoseconds digits: {:?}", s);
 
     let extra_zeros = (NANO_DIGITS - s.len()) as u32;
     let mul = 10u32.pow(extra_zeros);
-    let num = u32::from_str(s).map_err(|_| ())?;
+    let num = u32::from_str(s)?;
     Ok(num * mul)
 }
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
-
     use nom::types::CompleteStr;
 
     #[test]
