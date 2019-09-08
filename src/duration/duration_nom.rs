@@ -1,57 +1,61 @@
 use std::time::Duration;
 
 use failure::Error;
-use nom::digit1;
-use nom::types::CompleteStr;
+use nom::IResult;
+use nom::bytes::complete::tag;
 
-named!(period_num<CompleteStr, (u64, u32)>,
-    do_parse!(
-        whole: num >>
-        rest: opt!(preceded!(tag!("."), map_res!(digit1, super::to_nanos))) >>
-        (( whole, rest.unwrap_or(0) ))
-    )
-);
-
-fn to_u64(s: CompleteStr) -> Result<u64, ()> {
-    s.0.parse().map_err(|_| ())
+fn num(input: &str) -> IResult<&str, u64> {
+    let (input, num) = nom::character::complete::digit1(input)?;
+    Ok((input, num.parse().expect("TODO")))
 }
 
-named!(num<CompleteStr, u64>,
-    map_res!(digit1, to_u64));
+fn period_num(input: &str) -> IResult<&str, (u64, u32)> {
+    let (input, whole) = num(input)?;
+    if !input.starts_with(".") {
+        return Ok((input, (whole, 0)));
+    }
 
-named!(time<CompleteStr, (u64, u32)>,
-    do_parse!(
-        tag!("T") >>
-        h: opt!(terminated!(num, tag!("H"))) >>
-        m: opt!(terminated!(num, tag!("M"))) >>
-        s: opt!(terminated!(period_num, tag!("S"))) >>
-        (
-          (  h.unwrap_or(0) * super::SECS_PER_HOUR
-           + m.unwrap_or(0) * super::SECS_PER_MINUTE
-           + s.map(|(s, _ns)|  s).unwrap_or(0),
-             s.map(|(_s, ns)| ns).unwrap_or(0)
-          )
-        )
-    ));
+    let (input, _) = tag(".")(input)?;
+    let (input, frac) = nom::character::complete::digit1(input)?;
 
-named!(period<CompleteStr, (u64, u32)>,
-    do_parse!(
-        tag!("P") >>
-        w: opt!(terminated!(num, tag!("W"))) >>
-        d: opt!(terminated!(num, tag!("D"))) >>
-        t: opt!(time) >>
+    Ok((input, (whole, super::to_nanos(frac).expect("TODO"))))
+}
+
+fn time(input: &str) -> IResult<&str, (u64, u32)> {
+    let (input, _) = tag("T")(input)?;
+    let (input, h) = nom::combinator::opt(nom::sequence::terminated(num, tag("H")))(input)?;
+    let (input, m) = nom::combinator::opt(nom::sequence::terminated(num, tag("M")))(input)?;
+    let (input, s) = nom::combinator::opt(nom::sequence::terminated(period_num, tag("S")))(input)?;
+
+    Ok((input,
         (
-          (  w.unwrap_or(0) * super::SECS_PER_WEEK
-           + d.unwrap_or(0) * super::SECS_PER_DAY
-           + t.map(|(s, _ns)|  s).unwrap_or(0),
-             t.map(|(_s, ns)| ns).unwrap_or(0)
-          )
+            (  h.unwrap_or(0) * super::SECS_PER_HOUR
+                   + m.unwrap_or(0) * super::SECS_PER_MINUTE
+                   + s.map(|(s, _ns)|  s).unwrap_or(0),
+               s.map(|(_s, ns)| ns).unwrap_or(0)
+            )
         )
-    ));
+    ))
+}
+
+fn period(input: &str) -> IResult<&str, (u64, u32)> {
+    let (input, _) = tag("P")(input)?;
+    let (input, w) = nom::combinator::opt(nom::sequence::terminated(num, tag("W")))(input)?;
+    let (input, d) = nom::combinator::opt(nom::sequence::terminated(num, tag("D")))(input)?;
+    let (input, t) = nom::combinator::opt(time)(input)?;
+
+    Ok((input,
+        (  w.unwrap_or(0) * super::SECS_PER_WEEK
+               + d.unwrap_or(0) * super::SECS_PER_DAY
+               + t.map(|(s, _ns)|  s).unwrap_or(0),
+           t.map(|(_s, ns)| ns).unwrap_or(0)
+        )
+    ))
+}
 
 pub fn parse(input: &str) -> Result<Duration, Error> {
-    match period(CompleteStr(input)) {
-        Ok((CompleteStr(""), (s, ns))) => Ok(Duration::new(s, ns)),
+    match period(input) {
+        Ok(("", (s, ns))) => Ok(Duration::new(s, ns)),
         other => bail!("invalid: {:?}", other),
     }
 }
