@@ -2,6 +2,7 @@ use std::iter::Peekable;
 use std::str::FromStr;
 use std::time::Duration;
 
+use failure::err_msg;
 use failure::Error;
 
 struct Parts<'s> {
@@ -70,7 +71,7 @@ pub fn parse(input: &str) -> Result<Duration, Error> {
         if let Some(first_point) = body.find('.') {
             let (main, after) = body.split_at(first_point);
             body = main;
-            nanos = super::to_nanos(&after[1..])?;
+            nanos = super::to_nanos(&after[1..]).ok_or(err_msg("invalid nanos"))?;
         }
 
         seconds += u64::from_str(body)?;

@@ -3,8 +3,6 @@ mod duration_nom;
 
 use std::str::FromStr;
 
-use failure::Error;
-
 const SECS_PER_MINUTE: u64 = 60;
 const SECS_PER_HOUR: u64 = 60 * SECS_PER_MINUTE;
 const SECS_PER_DAY: u64 = 24 * SECS_PER_HOUR;
@@ -31,20 +29,20 @@ impl<'s> Strable for dyn AsRef<str> {
     }
 }
 
-fn to_nanos<S: Strable>(s: S) -> Result<u32, Error> {
+fn to_nanos<S: Strable>(s: S) -> Option<u32> {
     let s = s.as_str();
 
     const NANO_DIGITS: usize = 9;
-    ensure!(
-        s.len() <= NANO_DIGITS,
-        "too many nanoseconds digits: {:?}",
-        s
-    );
+    if s.len() > NANO_DIGITS {
+        return None;
+    }
 
     let extra_zeros = (NANO_DIGITS - s.len()) as u32;
     let mul = 10u32.pow(extra_zeros);
-    let num = u32::from_str(s)?;
-    Ok(num * mul)
+    match u32::from_str(s) {
+        Ok(num) => Some(num * mul),
+        Err(_) => None,
+    }
 }
 
 #[cfg(test)]

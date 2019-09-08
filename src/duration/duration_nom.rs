@@ -8,7 +8,11 @@ use nom::IResult;
 
 fn num(input: &str) -> IResult<&str, u64> {
     let (input, num) = nom::character::complete::digit1(input)?;
-    Ok((input, num.parse().expect("TODO")))
+    let num = num
+        .parse()
+        .map_err(|_| nom::Err::Error((input, nom::error::ErrorKind::TooLarge)))?;
+
+    Ok((input, num))
 }
 
 fn period_num(input: &str) -> IResult<&str, (u64, u32)> {
