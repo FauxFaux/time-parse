@@ -70,5 +70,10 @@ mod tests {
             Duration::new((2 * 24 + 1) * 60 * 60, 0),
             parse("P2DT1H").unwrap()
         );
+        assert!(parse("PT2").is_err());
+        assert!(parse("PT22").is_err());
+        assert!(parse("PT2M2").is_err());
+        assert!(parse("T2S").is_err());
+        assert!(parse("P2S").is_err());
     }
 }
