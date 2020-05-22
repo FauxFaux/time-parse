@@ -15,7 +15,7 @@ repository = "https://github.com/FauxFaux/time-parse"
 repository = "FauxFaux/time-parse"
 
 [dependencies]
-failure = "0.1"
+anyhow = "1"
 nom = "5"
 
 [dev-dependencies]

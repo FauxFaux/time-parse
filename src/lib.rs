@@ -1,5 +1,4 @@
-#[macro_use]
-extern crate failure;
+extern crate anyhow;
 extern crate nom;
 
 pub mod duration;

@@ -1,6 +1,7 @@
 use std::time::Duration;
 
-use failure::Error;
+use anyhow::bail;
+use anyhow::Result;
 use nom::bytes::complete::tag;
 use nom::combinator::opt;
 use nom::sequence::terminated;
@@ -61,7 +62,7 @@ fn period(input: &str) -> IResult<&str, (u64, u32)> {
     ))
 }
 
-pub fn parse(input: &str) -> Result<Duration, Error> {
+pub fn parse(input: &str) -> Result<Duration> {
     match period(input) {
         Ok(("", (s, ns))) => Ok(Duration::new(s, ns)),
         other => bail!("invalid: {:?}", other),

@@ -2,8 +2,10 @@ use std::iter::Peekable;
 use std::str::FromStr;
 use std::time::Duration;
 
-use failure::err_msg;
-use failure::Error;
+use anyhow::anyhow;
+use anyhow::bail;
+use anyhow::ensure;
+use anyhow::Result;
 
 struct Parts<'s> {
     inner: &'s str,
@@ -29,7 +31,7 @@ impl<'s> Iterator for Parts<'s> {
     }
 }
 
-fn maybe_take(parts: &mut Peekable<Parts>, token: char, mul: u64) -> Result<u64, Error> {
+fn maybe_take(parts: &mut Peekable<Parts>, token: char, mul: u64) -> Result<u64> {
     Ok(match parts.peek().cloned() {
         Some((body, found_token)) if found_token == token => {
             parts.next().unwrap();
@@ -39,7 +41,7 @@ fn maybe_take(parts: &mut Peekable<Parts>, token: char, mul: u64) -> Result<u64,
     })
 }
 
-fn take_empty(parts: &mut Peekable<Parts>, token: char) -> Result<(), Error> {
+fn take_empty(parts: &mut Peekable<Parts>, token: char) -> Result<()> {
     match parts.next() {
         Some(("", avail)) if avail == token => Ok(()),
         Some((head, avail)) if avail == token => {
@@ -49,7 +51,7 @@ fn take_empty(parts: &mut Peekable<Parts>, token: char) -> Result<(), Error> {
     }
 }
 
-pub fn parse(input: &str) -> Result<Duration, Error> {
+pub fn parse(input: &str) -> Result<Duration> {
     let mut parts = Parts::new(input).peekable();
 
     let mut seconds = 0u64;
@@ -71,7 +73,7 @@ pub fn parse(input: &str) -> Result<Duration, Error> {
         if let Some(first_point) = body.find('.') {
             let (main, after) = body.split_at(first_point);
             body = main;
-            nanos = super::to_nanos(&after[1..]).ok_or(err_msg("invalid nanos"))?;
+            nanos = super::to_nanos(&after[1..]).ok_or(anyhow!("invalid nanos"))?;
         }
 
         seconds += u64::from_str(body)?;
