@@ -23,7 +23,7 @@ impl<'s> Strable for &'s str {
     }
 }
 
-impl<'s> Strable for dyn AsRef<str> {
+impl Strable for dyn AsRef<str> {
     fn as_str(&self) -> &str {
         self.as_ref()
     }

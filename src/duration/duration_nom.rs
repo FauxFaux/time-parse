@@ -9,11 +9,14 @@ use nom::IResult;
 
 fn num(input: &str) -> IResult<&str, u64> {
     let (input, num) = nom::character::complete::digit1(input)?;
-    let num = num
-        .parse()
-        .map_err(|_| nom::Err::Error((input, nom::error::ErrorKind::TooLarge)))?;
 
-    Ok((input, num))
+    match num.parse() {
+        Ok(value) => Ok((input, value)),
+        Err(_) => Err(nom::Err::Error(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::TooLarge,
+        ))),
+    }
 }
 
 fn period_num(input: &str) -> IResult<&str, (u64, u32)> {
@@ -36,12 +39,12 @@ fn time(input: &str) -> IResult<&str, (u64, u32)> {
 
     Ok((
         input,
-        ((
+        (
             h.unwrap_or(0) * super::SECS_PER_HOUR
                 + m.unwrap_or(0) * super::SECS_PER_MINUTE
                 + s.map(|(s, _ns)| s).unwrap_or(0),
             s.map(|(_s, ns)| ns).unwrap_or(0),
-        )),
+        ),
     ))
 }
 
