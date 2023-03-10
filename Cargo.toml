@@ -1,6 +1,6 @@
 [package]
 name = "time-parse"
-version = "0.2.1-alpha.0"
+version = "0.2.1-alpha.1"
 authors = ["Chris West (Faux) <git@goeswhere.com>", "Frederic Sauvage <frederick.sauvage@gmail.com>"]
 
 categories = [
