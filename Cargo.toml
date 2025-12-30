@@ -15,7 +15,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1"
-nom = "6"
+nom = "7"
 
 [dev-dependencies]
 bencher = "0.1"
