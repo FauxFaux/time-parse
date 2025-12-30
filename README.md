@@ -1,6 +1,5 @@
 ## time-parse
 
-[![Build status](https://api.travis-ci.org/FauxFaux/time-parse.png)](https://travis-ci.org/FauxFaux/time-parse)
 [![](https://img.shields.io/crates/v/time-parse.svg)](https://crates.io/crates/time-parse)
 
 Experimenting with time parsing in Rust.
