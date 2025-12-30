@@ -12,7 +12,7 @@ struct Parts<'s> {
 }
 
 impl<'s> Parts<'s> {
-    fn new(inner: &str) -> Parts {
+    fn new(inner: &str) -> Parts<'_> {
         Parts { inner }
     }
 }

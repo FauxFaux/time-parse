@@ -11,7 +11,7 @@ fn num(input: &str) -> IResult<&str, u64> {
     let (input, num) = nom::character::complete::digit1(input)?;
     let num = num
         .parse()
-        .map_err(|_| nom::Err::Error((input, nom::error::ErrorKind::TooLarge)))?;
+        .map_err(|_| nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::TooLarge)))?;
 
     Ok((input, num))
 }
