@@ -1,11 +1,11 @@
 use std::time::Duration;
 
-use anyhow::bail;
 use anyhow::Result;
+use anyhow::bail;
+use nom::IResult;
 use nom::bytes::complete::tag;
 use nom::combinator::opt;
 use nom::sequence::terminated;
-use nom::IResult;
 
 fn num(input: &str) -> IResult<&str, u64> {
     let (input, num) = nom::character::complete::digit1(input)?;

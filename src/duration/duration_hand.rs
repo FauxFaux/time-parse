@@ -2,10 +2,10 @@ use std::iter::Peekable;
 use std::str::FromStr;
 use std::time::Duration;
 
+use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::ensure;
-use anyhow::Result;
 
 struct Parts<'s> {
     inner: &'s str,
@@ -67,7 +67,7 @@ pub fn parse(input: &str) -> Result<Duration> {
     seconds += maybe_take(&mut parts, 'H', super::SECS_PER_HOUR)?;
     seconds += maybe_take(&mut parts, 'M', super::SECS_PER_MINUTE)?;
 
-    if let Some((mut body, 'S')) = parts.peek() {
+    if let Some(&(mut body, 'S')) = parts.peek() {
         parts.next().unwrap();
 
         if let Some(first_point) = body.find('.') {
